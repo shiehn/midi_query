@@ -1,49 +1,55 @@
 import time
-import rtmidi
 import mido
+import rtmidi
 
 
-def print_midi_file_info():
-    midiout = rtmidi.MidiOut()
-    midiout.open_virtual_port('foo')
-    # note_on = [0x90, 60, 112]
-    # midiout.send_message(note_on)
+def seconds_per_quarter_note(microseconds_per_quarter_note):
+    return microseconds_per_quarter_note / 1000000.0
 
-    port = mido.open_output(name='foo', virtual=True)
+def get_tempo(midi_file):
+    for track in midi_file.tracks:
+        for msg in track:
+            if msg.type == 'set_tempo':
+                return msg.tempo
+    else:
+        # Default tempo.
+        return 500000
 
-    mid = mido.MidiFile('datasets/ballade1.mid', clip=True)
-    for msg in mid.play():
-        port.send(msg)
+def merge_tracks(midi_file):
+    print('do it here')
+
+
+def print_midi_file_info(midi_file):
+
+    print('TEMPO: {}'.format(get_tempo(midi_file)))
+    print('TEMPO: AS SEC: {}'.format(seconds_per_quarter_note(get_tempo(midi_file))))
+
+    print('TRACK_COUNT: ' + str(len(midi_file.tracks)))
+    num_of_tracks = len(midi_file.tracks)
+
+    # print('TEMPO:' + str(mid.tempo))
+    # get tempo in seconds
+    # seconds_per_quarter_note = seconds_per_quarter_note(mid.tempos[0].tempo)
+
+    # mid.tick2second()
+    # for msg in midi_file:
+    #     if msg.is_meta:
+    #         print('META: ' + str(msg.tempo))
+    # print('msg:' + str(msg))
+
+    # for i, track in enumerate(mid.tracks):
+    #     print('Track {}: {}'.format(i, track.name))
+    # for msg in track:
+    #     print(msg)
+    #
+    # for msg in midi_file.play():
+    #     port.send(msg)
 
 
 def main():
-    # midiout = rtmidi.MidiOut()
-    # available_ports = midiout.get_ports()
-    #
-    # if available_ports:
-    #     midiout.open_port(0)
-    # else:
-    #     midiout.open_virtual_port("My virtual output")
+    midi_file = mido.MidiFile('datasets/ballade1.mid', clip=True)
 
-    print_midi_file_info()
-
-    # degrees = [60, 62, 64, 65, 67, 69, 71, 72]  # MIDI note number
-    # track = 0
-    # channel = 0
-    # time = 0  # In beats
-    # duration = 1  # In beats
-    # tempo = 60  # In BPM
-    # volume = 100  # 0-127, as per the MIDI standard
-    #
-    # MyMIDI = MIDIFile(1)  # One track, defaults to format 1 (tempo track is created
-    # # automatically)
-    # MyMIDI.addTempo(track, time, tempo)
-    #
-    # for i, pitch in enumerate(degrees):
-    #     MyMIDI.addNote(track, channel, pitch, time + i, duration, volume)
-    #
-    # with open("major-scale.mid", "wb") as output_file:
-    #     MyMIDI.writeFile(output_file)
+    print_midi_file_info(midi_file)
 
 
 if __name__ == "__main__":

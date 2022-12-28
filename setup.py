@@ -10,6 +10,7 @@ setup(
     license='GPL v3',
     packages=['midi_query'],
     install_requires=['MIDIUtil>=1.2.1',
+                      'python-rtmidi>=1.4.9',
                       'mido>=1.2.10'
                       ],
 
