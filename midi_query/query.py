@@ -3,8 +3,8 @@ from mido import second2tick
 from mingus.containers import Note
 from mingus.core import chords
 from mingus.core.keys import get_notes
-
-from midi_query.midi_info import MidiInfo
+import midi_info
+import argparse
 
 REQUIRED_NOTE_MATCH_PER_BAR = 3
 
@@ -60,7 +60,8 @@ def convert_messages_to_notes(bars_of_messages):
     return bars_of_notes
 
 
-def find_matches(target_progression, target_key, bars_of_notes):
+def find_matches(target_progression, target_key, bars_of_notes, max_passing_tones_per_bar: int = 1,
+                 min_chord_tone_matches_per_bar: int = 2):
     match_indexes = []
     bars_idx = 0
 
@@ -92,7 +93,7 @@ def find_matches(target_progression, target_key, bars_of_notes):
             if len(note_chord_matches) < REQUIRED_NOTE_MATCH_PER_BAR:
                 is_match = False
 
-            print('MATCH STATUS: ' + str(is_match))
+            # print('MATCH STATUS: ' + str(is_match))
 
         if is_match:
             print('ADDING MATCH INDEX: ' + str(bars_idx))
@@ -114,14 +115,20 @@ def find_matches(target_progression, target_key, bars_of_notes):
     return match_indexes
 
 
-def find_clips(target_key: str, target_progression: str, midi_info: MidiInfo):
-    bars_of_messages = group_messages_by_bar(midi_info.get_merged_track(), midi_info.get_ticks_in_track(), midi_info.get_ticks_per_beat())
+def find_clips(target_key: str, target_progression: str, midi_info: midi_info.MidiInfo,
+               max_passing_tones_per_bar: int = 1,
+               min_chord_tone_matches_per_bar: int = 2):
+    if target_key is None:
+        max_passing_tones_per_bar = 0
+
+    bars_of_messages = group_messages_by_bar(midi_info.get_merged_track(), midi_info.get_ticks_in_track(),
+                                             midi_info.get_ticks_per_beat())
 
     bars_of_notes = convert_messages_to_notes(bars_of_messages)
     print('bars_of_notes: ' + str(bars_of_notes))
 
-    match = find_matches(target_progression, target_key, bars_of_notes)
-    print('has_match: ' + str(match))
+    match = find_matches(target_progression, target_key, bars_of_notes, max_passing_tones_per_bar,
+                         min_chord_tone_matches_per_bar)
 
     return match
 
@@ -130,14 +137,30 @@ def add_numbers(a, b):
     return a + b
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--chords", help="expects a comma separated list of chords ex. Cmaj7,Amin7,Fmaj7,Gdom7")
+parser.add_argument("--key", help="expects major key ex. 'C'")
+
+
 def main():
-    # PARAMS TO BE PASSED BY CLI
-    target_key = 'G'
-    target_progression = ['Cmaj7', 'Emin7', 'Emin7', 'Cmaj7']
+    args = parser.parse_args()
 
-    midi_info = MidiInfo('test_assets/cmaj7_em7_em7_cmaj7_bar5_key_g.MID')
+    target_key = 'c'
+    if args.key is not None:
+        target_key = args.key
 
-    find_clips(target_key, target_progression, midi_info)
+    target_progression = []
+
+    if args.chords is not None:
+        target_progression = args.chords.split(',')
+
+    if len(target_progression) != 4:
+        print('MIDI Query expects 4 chords')
+        return
+
+    minfo = midi_info.MidiInfo('test_assets/cmaj7_em7_em7_cmaj7_bar5_key_g.MID')
+
+    find_clips(target_key, target_progression, minfo)
 
 
 if __name__ == "__main__":

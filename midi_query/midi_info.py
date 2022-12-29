@@ -1,5 +1,5 @@
 import mido
-from mido import second2tick
+from mido import second2tick, MidiFile
 
 drum_filter = ['drum',
                'drums',
@@ -30,10 +30,13 @@ drum_filter = ['drum',
 
 
 class MidiInfo(object):
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str = None, midi_file: MidiFile = None):
+        if file_path is None and midi_file is None:
+            raise ValueError('file_path or midi_file must be set')
+
         self.load_success = False
         self.file_path = file_path
-        self.midi_file = None
+        self.midi_file = midi_file
         self.merged_track = None
         self.ticks_per_beat = None
         self.track_length_in_ticks = None
@@ -103,7 +106,8 @@ class MidiInfo(object):
 
     def load(self):
         try:
-            self.midi_file = mido.MidiFile(self.file_path, clip=True)
+            if self.midi_file is None:
+                self.midi_file = mido.MidiFile(self.file_path, clip=True)
 
             self.ticks_per_beat = self.midi_file.ticks_per_beat
 

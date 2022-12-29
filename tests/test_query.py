@@ -9,7 +9,7 @@ from midi_query.loader import Loader
 
 class TestQuery(unittest.TestCase):
 
-    def test_query(self):
+    def test_query_(self):
 
         target_key = 'G'
         target_progression = ['Cmaj7', 'Emin7', 'Emin7', 'Cmaj7']

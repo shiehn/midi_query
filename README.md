@@ -15,4 +15,4 @@ TODO: instructions on how to add a dataset
 
 ### Run Application
 
-`python ./midi_query/query.py `
+`python midi_query/query.py --chords 'Cmaj7,Emin7,Dmin7,Cmaj7' --key 'c'`
