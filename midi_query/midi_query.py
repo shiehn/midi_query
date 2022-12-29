@@ -4,6 +4,7 @@ import mingus
 from mido import tick2second, MidiFile, second2tick
 from mingus.containers import Note
 from mingus.core import chords
+from mingus.core.keys import get_notes
 
 REQUIRED_NOTE_MATCH_PER_BAR = 3
 
@@ -155,14 +156,14 @@ def find_matches(target_progression, target_key, bars_of_notes):
         for prog_idx, prog_chord in enumerate(target_progression):
             note_chord_matches = []
 
-            print('COMPARE PROG_IDX: ' + str(prog_idx) + ' to BAR_IDX: ' + str(bars_idx + prog_idx))
+            # print('COMPARE PROG_IDX: ' + str(prog_idx) + ' to BAR_IDX: ' + str(bars_idx + prog_idx))
             notes_in_prog_chord = chords.from_shorthand(prog_chord)
             notes_at_bar_idx = []
             for note in bars_of_notes[bars_idx + prog_idx]:
                 notes_at_bar_idx.append(note.name)
 
-            print('NOTES_IN_PROG_CHORD: ' + str(notes_in_prog_chord))
-            print('NOTES_IN_BAR_IDX_CHORD: ' + str(notes_at_bar_idx))
+            # print('NOTES_IN_PROG_CHORD: ' + str(notes_in_prog_chord))
+            # print('NOTES_IN_BAR_IDX_CHORD: ' + str(notes_at_bar_idx))
 
             for note in bars_of_notes[bars_idx + prog_idx]:
                 name = note.name
@@ -170,7 +171,8 @@ def find_matches(target_progression, target_key, bars_of_notes):
                     if name not in note_chord_matches:
                         note_chord_matches.append(name)
                 else:
-                    notes_not_in_chord.append(name)
+                    if name not in notes_not_in_chord:
+                        notes_not_in_chord.append(name)
 
             if len(note_chord_matches) < REQUIRED_NOTE_MATCH_PER_BAR:
                 is_match = False
@@ -178,48 +180,29 @@ def find_matches(target_progression, target_key, bars_of_notes):
             print('MATCH STATUS: ' + str(is_match))
 
         if is_match:
-            match_indexes.append(bars_idx)
+            print('ADDING MATCH INDEX: ' + str(bars_idx))
+            print('EXTRA NOTES: ' + str(notes_not_in_chord))
+            scale = get_notes(target_key)
+            print('TARGET SCALE: ' + str(scale))
+            scale_match = True
+            for note in notes_not_in_chord:
+                if note not in scale:
+                    scale_match = False
+
+            print('SCALE_MATCH: ' + str(scale_match))
+
+            if scale_match:
+                match_indexes.append(bars_idx)
 
         bars_idx = bars_idx + 1
-
-    # match_indexes = []
-    # bar_matches = 0
-    #
-    # for bar_idx, bar in enumerate(bars_of_notes):
-    #     print('bar_idx: ' + str(bar_idx))
-    #     print('chord in target_prog: ' + str(target_progression[bar_matches]))
-    #     notes_in_chord = chords.from_shorthand(target_progression[bar_matches])
-    #     print('notes_in_target_prog_chord: ' + str(notes_in_chord))
-    #     print('notes_in_bar: ' + str(bar))
-    #
-    #     notes_not_in_chord = []
-    #     note_chord_matches = []  # set maybe?
-    #     for note in bar:
-    #         name = note.name
-    #         if name in notes_in_chord:
-    #             if name not in note_chord_matches:
-    #                 note_chord_matches.append(name)
-    #         else:
-    #             notes_not_in_chord.append(name)
-    #
-    #     if len(note_chord_matches) > 1:
-    #         bar_matches = bar_matches + 1
-    #     else:
-    #         bar_matches = 0
-    #
-    #     print('note_chord_matches: ' + str(note_chord_matches))
-    #
-    #     if bar_matches == len(target_progression):
-    #         match_indexes.append(bar_idx)
-    #         bar_matches = 0
 
     return match_indexes
 
 
 def print_midi_file_info(midi_file):
-    target_key = 'C'
-    target_progression = ['Cmaj7', 'Emin7', 'Dmin7', 'Cmaj7']
-    midi_file = mido.MidiFile('test_assets/cmaj7_em7_dm7_cmaj7_bar5_key_c.MID', clip=True)
+    target_key = 'G'
+    target_progression = ['Cmaj7', 'Emin7', 'Emin7', 'Cmaj7']
+    midi_file = mido.MidiFile('test_assets/cmaj7_em7_em7_cmaj7_bar5_key_g.MID', clip=True)
 
     ticks_per_beat = midi_file.ticks_per_beat
     print('ticks_per_beat: ' + str(ticks_per_beat))
