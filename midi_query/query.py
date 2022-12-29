@@ -1,7 +1,5 @@
-import time
 import mido
-import mingus
-from mido import tick2second, MidiFile, second2tick
+from mido import second2tick
 from mingus.containers import Note
 from mingus.core import chords
 from mingus.core.keys import get_notes
@@ -237,6 +235,10 @@ def print_midi_file_info(midi_file):
 
     match = find_matches(target_progression, target_key, bars_of_notes)
     print('has_match: ' + str(match))
+
+
+def add_numbers(a, b):
+    return a + b
 
 
 def main():

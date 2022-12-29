@@ -13,7 +13,6 @@ setup(
                       'python-rtmidi>=1.4.9',
                       'mido>=1.2.10',
                       'mingus>=0.6.1',
-                      'rmidi>=0.0.37'
                       ],
 
     classifiers=[
