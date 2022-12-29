@@ -11,7 +11,9 @@ setup(
     packages=['midi_query'],
     install_requires=['MIDIUtil>=1.2.1',
                       'python-rtmidi>=1.4.9',
-                      'mido>=1.2.10'
+                      'mido>=1.2.10',
+                      'mingus>=0.6.1',
+                      'rmidi>=0.0.37'
                       ],
 
     classifiers=[
