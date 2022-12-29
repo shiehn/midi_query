@@ -4,92 +4,9 @@ from mingus.containers import Note
 from mingus.core import chords
 from mingus.core.keys import get_notes
 
+from midi_query.midi_info import MidiInfo
+
 REQUIRED_NOTE_MATCH_PER_BAR = 3
-
-drum_filter = ['drum',
-               'drums',
-               'bassdrum',
-               'snare',
-               'snaredrum',
-               'piccolo',
-               'shaker',
-               'timpani',
-               'timp',
-               'hihat',
-               'kick',
-               'tambourin',
-               'tambourine',
-               'congas',
-               'conga\'s'
-               'ride',
-               'crash',
-               'tom',
-               'claps',
-               'clap',
-               'handclaps',
-               'cowbell',
-               'bongo',
-               'percussion',
-               'perc',
-               ]
-
-
-def seconds_per_quarter_note(microseconds_per_quarter_note):
-    return microseconds_per_quarter_note / 1000000.0
-
-
-def micros_to_seconds(microseconds):
-    return microseconds / 1000000.0
-
-
-def get_tempo(midi_file):
-    for track in midi_file.tracks:
-        for msg in track:
-            if msg.type == 'set_tempo':
-                return msg.tempo
-    else:
-        # Default tempo.
-        return 500000
-
-
-def merge_tracks(tracks):
-    printed_tracks = []
-    for track in tracks:
-        for msg in track:
-            if msg.is_meta:
-                if 'name' in msg.dict():
-                    if msg.name not in printed_tracks:
-                        printed_tracks.append(msg.name)
-                        print('track_name:' + str(msg.name))
-
-    return mido.merge_tracks(tracks)
-
-
-def filter_drum_tracks(tracks):
-    filtered_tracks = []
-
-    track_count = 0
-    for track in tracks:
-        add_track = True
-        for msg in track:
-            if msg.is_meta:
-                if 'name' in msg.dict():
-                    track_name = msg.name.lower().strip()
-                    if track_name in drum_filter:
-                        print('FILTER TRACK: ' + str(msg.name))
-                        add_track = False
-
-                if 'channel' in msg.dict():
-                    if msg.channel > 10:
-                        # drop the drum track
-                        add_track = False
-
-        if add_track:
-            filtered_tracks.append(track)
-
-        track_count = track_count + 1
-
-    return filtered_tracks
 
 
 def get_last_note_start_time(midi_track):
@@ -197,38 +114,8 @@ def find_matches(target_progression, target_key, bars_of_notes):
     return match_indexes
 
 
-def print_midi_file_info(midi_file):
-    target_key = 'G'
-    target_progression = ['Cmaj7', 'Emin7', 'Emin7', 'Cmaj7']
-    midi_file = mido.MidiFile('test_assets/cmaj7_em7_em7_cmaj7_bar5_key_g.MID', clip=True)
-
-    ticks_per_beat = midi_file.ticks_per_beat
-    print('ticks_per_beat: ' + str(ticks_per_beat))
-
-    print(
-        'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
-
-    tempo_in_ms = get_tempo(midi_file)
-    print('TEMPO MS: {}'.format(get_tempo(midi_file)))
-    print('TEMPO: AS SEC: {}'.format(seconds_per_quarter_note(get_tempo(midi_file))))
-
-    print('TRACK_COUNT: ' + str(len(midi_file.tracks)))
-    num_of_tracks = len(midi_file.tracks)
-
-    track_length = midi_file.length
-    print('track_length: ' + str(track_length))
-
-    track_length_ticks = second2tick(track_length, ticks_per_beat, tempo_in_ms)
-    print('track_length_ticks: ' + str(track_length_ticks))
-
-    filtered_tracks = filter_drum_tracks(midi_file.tracks)
-
-    merged_track = merge_tracks(filtered_tracks)
-    print('AFTER MERGE msg_count: ' + str(len(merged_track)))
-
-    bars_of_messages = group_messages_by_bar(merged_track, track_length_ticks, ticks_per_beat)
-
-    # print('bars_of_messages: ' + str(bars_of_messages))
+def find_clips(target_key: str, target_progression: str, midi_info: MidiInfo):
+    bars_of_messages = group_messages_by_bar(midi_info.get_merged_track(), midi_info.get_ticks_in_track(), midi_info.get_ticks_per_beat())
 
     bars_of_notes = convert_messages_to_notes(bars_of_messages)
     print('bars_of_notes: ' + str(bars_of_notes))
@@ -236,15 +123,21 @@ def print_midi_file_info(midi_file):
     match = find_matches(target_progression, target_key, bars_of_notes)
     print('has_match: ' + str(match))
 
+    return match
+
 
 def add_numbers(a, b):
     return a + b
 
 
 def main():
-    midi_file = mido.MidiFile('datasets/multi_track_pop.mid', clip=True)
+    # PARAMS TO BE PASSED BY CLI
+    target_key = 'G'
+    target_progression = ['Cmaj7', 'Emin7', 'Emin7', 'Cmaj7']
 
-    print_midi_file_info(midi_file)
+    midi_info = MidiInfo('test_assets/cmaj7_em7_em7_cmaj7_bar5_key_g.MID')
+
+    find_clips(target_key, target_progression, midi_info)
 
 
 if __name__ == "__main__":
