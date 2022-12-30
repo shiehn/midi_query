@@ -113,9 +113,12 @@ class MidiInfo(object):
     def load(self):
         try:
             if self.midi_file is None:
+                print('Loading midi file: ' + self.file_path)
                 self.midi_file = mido.MidiFile(self.file_path, clip=True)
 
             self.ticks_per_beat = self.midi_file.ticks_per_beat
+
+            print('MIDI_INFO: TYPE: ' + str(self.midi_file.type))
 
             print('MIDI_INFO: ticks_per_beat: ' + str(self.ticks_per_beat))
 
@@ -123,8 +126,9 @@ class MidiInfo(object):
             print('MIDI_INFO: TEMPO MS: {}'.format(tempo_in_ms))
             print('MIDI_INFO: TEMPO: AS SEC: {}'.format(self.seconds_per_quarter_note(tempo_in_ms)))
 
-            print('MIDI_INFO: ORIGINAL TRACK COUNT: ' + str(len(self.midi_file.tracks)))
+            # print('MIDI_INFO: ORIGINAL TRACK COUNT: ' + str(len(self.midi_file.tracks)))
 
+            # print('MIDI_INFO: self.midi_file: ' + str(self.midi_file))
             track_length = self.midi_file.length
             print('MIDI_INFO: track_length: ' + str(track_length))
 

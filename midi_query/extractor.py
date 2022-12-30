@@ -1,6 +1,6 @@
 from mido import MidiFile, MidiTrack
 
-from midi_query.midi_info import MidiInfo
+from midi_info import MidiInfo
 
 
 class Extractor(object):
