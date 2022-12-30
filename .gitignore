@@ -136,3 +136,4 @@ datasets/*
 
 #filesystem
 .DS_Store
+output/*

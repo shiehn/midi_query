@@ -1,11 +1,19 @@
+import os
+import pathlib
+import uuid
+
 import mido
+from midi_query import extractor
 from mido import second2tick
 from mingus.containers import Note
 from mingus.core import chords
 from mingus.core.keys import get_notes
-import midi_info
 import argparse
+import midi_info
+import extractor
 
+OUTPUT_DIR = 'output'
+DATASET_DIR = 'datasets'
 REQUIRED_NOTE_MATCH_PER_BAR = 3
 
 
@@ -96,16 +104,16 @@ def find_matches(target_progression, target_key, bars_of_notes, max_passing_tone
             # print('MATCH STATUS: ' + str(is_match))
 
         if is_match:
-            print('ADDING MATCH INDEX: ' + str(bars_idx))
-            print('EXTRA NOTES: ' + str(notes_not_in_chord))
+            # print('ADDING MATCH INDEX: ' + str(bars_idx))
+            # print('EXTRA NOTES: ' + str(notes_not_in_chord))
             scale = get_notes(target_key)
-            print('TARGET SCALE: ' + str(scale))
+            # print('TARGET SCALE: ' + str(scale))
             scale_match = True
             for note in notes_not_in_chord:
                 if note not in scale:
                     scale_match = False
 
-            print('SCALE_MATCH: ' + str(scale_match))
+            # print('SCALE_MATCH: ' + str(scale_match))
 
             if scale_match:
                 match_indexes.append(bars_idx)
@@ -125,7 +133,6 @@ def find_clips(target_key: str, target_progression: str, midi_info: midi_info.Mi
                                              midi_info.get_ticks_per_beat())
 
     bars_of_notes = convert_messages_to_notes(bars_of_messages)
-    print('bars_of_notes: ' + str(bars_of_notes))
 
     match = find_matches(target_progression, target_key, bars_of_notes, max_passing_tones_per_bar,
                          min_chord_tone_matches_per_bar)
@@ -135,6 +142,16 @@ def find_clips(target_key: str, target_progression: str, midi_info: midi_info.Mi
 
 def add_numbers(a, b):
     return a + b
+
+
+def create_output_dir(target_progression, target_key) -> str:
+    dir_name = 'key_' + target_key + '_chords_'.join(target_progression)
+    output_path = os.path.join(OUTPUT_DIR, dir_name)
+
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
+    return output_path
 
 
 parser = argparse.ArgumentParser()
@@ -158,9 +175,29 @@ def main():
         print('MIDI Query expects 4 chords')
         return
 
-    minfo = midi_info.MidiInfo('test_assets/cmaj7_em7_em7_cmaj7_bar5_key_g.MID')
+    output_dir = create_output_dir(target_progression, target_key)
 
-    find_clips(target_key, target_progression, minfo)
+    output_files = []
+    for root, d_names, f_names in os.walk(DATASET_DIR):
+        for f in f_names:
+            file_path = os.path.join(root, f)
+            file_extension = pathlib.Path(file_path).suffix
+            if file_extension == '.mid' or file_extension == '.midi' or file_extension == '.MID' or file_extension == '.MIDI':
+
+                # print('FILE_PATH: ' + file_path)
+                info = midi_info.MidiInfo(file_path=file_path)
+                print('FUCK: ' + str(info.get_ticks_in_track()))
+                match_indexes = find_clips(target_key, target_progression, info)
+
+                # TODO check the file size
+                for match_idx in match_indexes:
+                    extrack = extractor.Extractor(info)
+                    midi_clip = extrack.extract(match_idx, len(target_progression))
+                    output_file_path = os.path.join(output_dir, uuid.uuid4().hex + '.mid')
+                    midi_clip.midi_file.save(output_file_path)
+                    output_files.append(output_file_path)
+
+    print("output_files = %s" % output_files)
 
 
 if __name__ == "__main__":

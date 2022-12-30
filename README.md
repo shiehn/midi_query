@@ -11,7 +11,7 @@ Query MIDI datasets for matching key, time signature &amp; chord progression
 
 ### Add Dataset
 
-TODO: instructions on how to add a dataset
+Add your dataset of .mid or .midi files to the `midi_query/datasets` directory. Nested directories are supported.
 
 ### Run Application
 

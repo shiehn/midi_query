@@ -1,3 +1,5 @@
+from os import path
+
 import mido
 from mido import second2tick, MidiFile
 
@@ -33,6 +35,10 @@ class MidiInfo(object):
     def __init__(self, file_path: str = None, midi_file: MidiFile = None):
         if file_path is None and midi_file is None:
             raise ValueError('file_path or midi_file must be set')
+
+        if file_path is not None:
+            if path.isfile(file_path) is False:
+                raise ValueError('file_path must be a valid file path')
 
         self.load_success = False
         self.file_path = file_path
@@ -100,7 +106,7 @@ class MidiInfo(object):
                     if 'name' in msg.dict():
                         if msg.name not in printed_tracks:
                             printed_tracks.append(msg.name)
-                            print('track_name:' + str(msg.name))
+                            # print('track_name:' + str(msg.name))
 
         return mido.merge_tracks(tracks)
 
@@ -133,7 +139,7 @@ class MidiInfo(object):
 
             self.load_success = True
         except Exception as e:
-            print('Error loading midi file: ' + self.file_path)
+            print('Error loading midi file: ' + str(self.file_path))
             print('Error: ' + str(e))
             return
 
