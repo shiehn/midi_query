@@ -16,3 +16,5 @@ Add your dataset of .mid or .midi files to the `midi_query/datasets` directory. 
 ### Run Application
 
 `python midi_query/query.py --chords 'Cmaj7,Emin7,Dmin7,Cmaj7' --key 'c'`
+
+Find your results in the midi_query/output directory.
