@@ -2,15 +2,12 @@ import os
 import pathlib
 import uuid
 
-import mido
-from midi_query import extractor
-from mido import second2tick
 from mingus.containers import Note
 from mingus.core import chords
 from mingus.core.keys import get_notes
 import argparse
-import midi_info
-import extractor
+
+from midi_info import MidiInfo
 
 OUTPUT_DIR = 'output'
 DATASET_DIR = 'datasets'
@@ -123,7 +120,7 @@ def find_matches(target_progression, target_key, bars_of_notes, max_passing_tone
     return match_indexes
 
 
-def find_clips(target_key: str, target_progression: str, midi_info: midi_info.MidiInfo,
+def find_clips(target_key: str, target_progression: str, midi_info: MidiInfo,
                max_passing_tones_per_bar: int = 1,
                min_chord_tone_matches_per_bar: int = 2):
     if target_key is None:
@@ -185,13 +182,13 @@ def main():
             if file_extension == '.mid' or file_extension == '.midi' or file_extension == '.MID' or file_extension == '.MIDI':
 
                 # print('FILE_PATH: ' + file_path)
-                info = midi_info.MidiInfo(file_path=file_path)
+                info = MidiInfo(file_path=file_path)
                 print('FUCK: ' + str(info.get_ticks_in_track()))
                 match_indexes = find_clips(target_key, target_progression, info)
 
                 # TODO check the file size
                 for match_idx in match_indexes:
-                    extrack = extractor.Extractor(info)
+                    extrack = Extractor(info)
                     midi_clip = extrack.extract(match_idx, len(target_progression))
                     output_file_path = os.path.join(output_dir, uuid.uuid4().hex + '.mid')
                     midi_clip.midi_file.save(output_file_path)

@@ -1,16 +1,16 @@
 from mido import MidiFile, MidiTrack
 
-import midi_info
+from midi_query.midi_info import MidiInfo
 
 
 class Extractor(object):
-    def __init__(self, midi_info: midi_info.MidiInfo):
-        if midi_info is None:
+    def __init__(self, minfo: MidiInfo):
+        if minfo is None:
             print('ERROR: midi_info is None')
             raise ValueError('midi_info cannot be None')
-        self.midi_info = midi_info
+        self.midi_info = minfo
 
-    def extract(self, start_index: int, num_of_bars: int = 4) -> midi_info.MidiInfo:
+    def extract(self, start_index: int, num_of_bars: int = 4) -> MidiInfo:
 
         ticks_at_start = start_index * self.midi_info.get_ticks_per_beat() * 4
         ticks_at_end = ticks_at_start + (num_of_bars * self.midi_info.get_ticks_per_beat() * 4)
@@ -28,4 +28,4 @@ class Extractor(object):
                     if current_time >= ticks_at_start and current_time < ticks_at_end:
                         track.append(msg)
 
-        return midi_info.MidiInfo(midi_file=midi_clip)
+        return MidiInfo(midi_file=midi_clip)

@@ -1,4 +1,4 @@
-from midi_query.midi_info import MidiInfo
+from midi_info import MidiInfo
 
 
 class Loader(object):

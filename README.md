@@ -7,7 +7,7 @@ Query MIDI datasets for matching key, time signature &amp; chord progression
 
 ### Tests
 
-`python -m unittest discover -s tests`
+`python -m unittest discover -s tests -t midi_query`
 
 ### Add Dataset
 

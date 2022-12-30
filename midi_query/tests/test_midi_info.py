@@ -1,5 +1,6 @@
 import unittest
 
+
 from midi_query.midi_info import MidiInfo
 
 

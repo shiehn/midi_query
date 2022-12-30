@@ -1,11 +1,8 @@
 import unittest
 
-import midi_query
-import mido
 
 from midi_query import query
-from midi_query.loader import Loader
-
+from loader import Loader
 
 class TestQuery(unittest.TestCase):
 
