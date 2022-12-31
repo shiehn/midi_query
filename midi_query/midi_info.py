@@ -57,6 +57,17 @@ class MidiInfo(object):
     def get_merged_track(self):
         return self.merged_track
 
+    def transpose_up(self, transpose_amount: int) -> bool:
+        for msg in self.merged_track:
+            if msg.type == 'note_on' or msg.type == 'note_off':
+                new_note_value = msg.note + transpose_amount
+                if new_note_value > 127:
+                    return False
+
+                msg.note = new_note_value
+
+        return True
+
     def get_tempo(self, midi_file):
         for track in midi_file.tracks:
             for msg in track:

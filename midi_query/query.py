@@ -9,8 +9,8 @@ import argparse
 
 from midi_info import MidiInfo
 from extractor import Extractor
-from config import REQUIRED_NOTE_MATCH_PER_BAR, MAX_NONE_CHORD_TONES_PER_BAR, OUTPUT_DIR, DATASET_DIR, \
-    MAX_FILES_TO_SEARCH
+from config import OUTPUT_DIR, DATASET_DIR, \
+    MAX_FILES_TO_SEARCH, MAX_NONE_CHORD_TONES_PER_BAR, MIN_CHORD_TONES_PER_BAR, DATASET_START_OFFSET
 
 
 def get_last_note_start_time(midi_track):
@@ -106,11 +106,11 @@ def find_matches(target_progression, target_key, bars_of_notes, max_passing_tone
                     if name not in notes_not_in_chord:
                         notes_not_in_chord.append(name)
 
-            if len(note_chord_matches) < REQUIRED_NOTE_MATCH_PER_BAR:
-                print('FAILED: REQUIRED_NOTE_MATCH_PER_BAR: ' + str(REQUIRED_NOTE_MATCH_PER_BAR))
+            if len(note_chord_matches) < min_chord_tone_matches_per_bar:
+                print('FAILED: REQUIRED_NOTE_MATCH_PER_BAR: ' + str(min_chord_tone_matches_per_bar))
                 is_match = False
 
-            if len(notes_not_in_chord) > MAX_NONE_CHORD_TONES_PER_BAR:
+            if len(notes_not_in_chord) > max_passing_tones_per_bar:
                 print('FAILED: MAX_NONE_CHORD_TONES_PER_BAR: ' + str(len(notes_not_in_chord)))
                 is_match = False
 
@@ -173,7 +173,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--chords", help="expects a comma separated list of chords ex. Cmaj7,Amin7,Fmaj7,Gdom7")
 parser.add_argument("--key", help="expects major key ex. 'C'")
 
-
 def main():
     args = parser.parse_args()
 
@@ -199,9 +198,8 @@ def main():
 
     output_dir = create_output_dir(target_progression, target_key)
 
-    print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
-
     file_count = 0
+    iterate_count = 0
     error_count = 0
     extracted_count = 0
     output_files = []
@@ -215,6 +213,11 @@ def main():
                     if file_count > MAX_FILES_TO_SEARCH:
                         raise Exception('Max files reached')
 
+                    iterate_count = iterate_count + 1
+                    if iterate_count < DATASET_START_OFFSET:
+                        print('ITERATE: ' + str(iterate_count) + ' SKIPPING: ' + file_path)
+                        continue
+
                     file_count = file_count + 1
                     print('PROCESSING FILE: ' + str(file_count) + ' ' + file_path)
 
@@ -225,16 +228,22 @@ def main():
                         error_count = error_count + 1
                         continue
 
-                    match_indexes = find_clips(target_key, target_progression, info)
+                    # for each file transpose it up 11 times
+                    for i in range(0, 12):
+                        print('TRANSPOSE UP: +' + str(i))
+                        if info.transpose_up(i*1) is False:
+                            continue
 
-                    # TODO check the file size
-                    for match_idx in match_indexes:
-                        extrack = Extractor(info)
-                        midi_clip = extrack.extract(match_idx, len(target_progression))
-                        output_file_path = os.path.join(output_dir, uuid.uuid4().hex + '.mid')
-                        midi_clip.midi_file.save(output_file_path)
-                        output_files.append(output_file_path)
-                        extracted_count = extracted_count + 1
+                        match_indexes = find_clips(target_key, target_progression, info, MAX_NONE_CHORD_TONES_PER_BAR, MIN_CHORD_TONES_PER_BAR)
+                        if len(match_indexes) > 0:
+                            # TODO check the file size
+                            for match_idx in match_indexes:
+                                extrack = Extractor(info)
+                                midi_clip = extrack.extract(match_idx, len(target_progression))
+                                output_file_path = os.path.join(output_dir, uuid.uuid4().hex + '.mid')
+                                midi_clip.midi_file.save(output_file_path)
+                                output_files.append(output_file_path)
+                                extracted_count = extracted_count + 1
 
     except Exception as e:
         print('LOOP BREAK: ' + str(e))
